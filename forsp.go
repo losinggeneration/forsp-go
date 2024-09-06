@@ -573,6 +573,8 @@ func setup(filename string) {
 	env = envDefinePrim(env, "<<", primLsh)
 	env = envDefinePrim(env, ">>", primRsh)
 
+	env = optionalUnsafe(env)
+
 	state.env = env
 }
 
