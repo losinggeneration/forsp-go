@@ -1,11 +1,11 @@
 //go:build unsafe
 
-package main
+package forsp
 
 import "unsafe"
 
 // Low-level primitives
-func primPtrState(_ **Obj) {
+func (f *Forsp) primPtrState(_ **Obj) {
 	p := uintptr(unsafe.Pointer(&state))
 	push(numberNew(int64(p)))
 }
@@ -31,9 +31,9 @@ func primPtrFromObj(_ **Obj) {
 	push(numberNew(int64(uintptr(p))))
 }
 
-func optionalUnsafe(env *Obj) *Obj {
+func optionalUnsafe(f *Forsp, env *Obj) *Obj {
 	// Low-level primitives
-	env = envDefinePrim(env, "ptr-state!", primPtrState)
+	env = envDefinePrim(env, "ptr-state!", f.primPtrState)
 	env = envDefinePrim(env, "ptr-read!", primPtrRead)
 	env = envDefinePrim(env, "ptr-write!", primPtrWrite)
 	env = envDefinePrim(env, "ptr-to-obj!", primPtrToObj)
