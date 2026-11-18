@@ -30,9 +30,12 @@ Forth. I've implemented a bare metal Forth before, but have never done a Lisp,
 and this seemed like a good introduction implementation as the original C is
 < 700 lines of code.
 
-Given time & interest, I may rework this from a stand alone program to an
-package + program. For this reason, consider the API unstable and subject to
-change without any guarantees.
+I've reworked the code a bit so there's a forsp/ package & the top level is the
+main application. I haven't tried embedding forsp/ anywhere really. The only
+place to use the package is REPL in forsp.go. For this reason, consider the
+forsp/ package API unstable and subject to change without any guarantees.
+
+I also did an [Odin Port](https://github.com/losinggeneration/forsp-odin).
 
 ## Discussion
 
