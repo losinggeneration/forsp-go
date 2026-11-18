@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"bytes"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -10,6 +11,8 @@ import (
 
 	"github.com/losinggeneration/forsp-go/forsp"
 )
+
+type forspError struct{ error }
 
 func loadFile(filename string) (io.Reader, error) {
 	file, err := os.Open(filename)
@@ -44,41 +47,66 @@ func New() *Forsp {
 	return &f
 }
 
+func run(f *Forsp, i int) error {
+	r, err := loadFile(os.Args[i])
+	if err != nil {
+		return err
+	}
+
+	if err := f.SetReader(r); err != nil {
+		return err
+	}
+
+	obj := f.Read()
+	f.Compute(obj)
+
+	return nil
+}
+
+func repl(f *Forsp, reader *bufio.Reader) (err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			err = forspError{fmt.Errorf("%v", r)}
+		}
+	}()
+
+	line, _, err := reader.ReadLine()
+	if err != nil {
+		return err
+	}
+
+	if err := f.SetReader(strings.NewReader(string(line))); err != nil {
+		return err
+	}
+
+	obj := f.Read()
+	f.Compute(obj)
+
+	return nil
+}
+
 func main() {
 	f := New()
 
 	if len(os.Args) >= 2 {
-		r, err := loadFile(os.Args[1])
-		if err != nil {
-			fmt.Fprintln(os.Stderr, err)
-			os.Exit(1)
+		for i := 1; i < len(os.Args); i++ {
+			err := run(f, i)
+			if err != nil {
+				fmt.Fprintln(os.Stderr, err)
+				os.Exit(1)
+			}
 		}
-
-		if err := f.SetReader(r); err != nil {
-			fmt.Fprintln(os.Stderr, err)
-			os.Exit(1)
-		}
-
-		obj := f.Read()
-		f.Compute(obj)
 
 		return
 	}
 
 	reader := bufio.NewReader(os.Stdin)
 	for !f.done {
-		line, _, err := reader.ReadLine()
-		if err != nil {
+		if err := repl(f, reader); !errors.Is(err, forspError{}) {
+			fmt.Fprintln(os.Stderr, err)
+		} else if err != nil {
 			fmt.Fprintln(os.Stderr, err)
 			os.Exit(1)
 		}
-
-		if err := f.SetReader(strings.NewReader(string(line))); err != nil {
-			fmt.Fprintln(os.Stderr, err)
-			os.Exit(1)
-		}
-
-		obj := f.Read()
-		f.Compute(obj)
 	}
 }

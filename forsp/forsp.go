@@ -411,7 +411,11 @@ func (f *Forsp) Pop() *Obj {
 	return nil
 }
 
-func (f *Forsp) ComputeEnv(comp *Obj, env *Obj) {
+func (f *Forsp) ComputeLocal(comp *Obj, env *Obj) {
+	f.ComputeEnv(comp, &env)
+}
+
+func (f *Forsp) ComputeEnv(comp *Obj, env **Obj) {
 	for comp != f.nil {
 		cmd := car(comp)
 		comp = cdr(comp)
@@ -426,7 +430,7 @@ func (f *Forsp) ComputeEnv(comp *Obj, env *Obj) {
 			continue
 		}
 
-		f.eval(cmd, &env)
+		f.eval(cmd, env)
 	}
 }
 
@@ -434,7 +438,7 @@ func (f *Forsp) eval(expr *Obj, env **Obj) {
 	if is(expr, TagAtom) {
 		val := f.EnvFind(*env, expr)
 		if is(val, TagClosure) {
-			f.ComputeEnv(val.body, val.env)
+			f.ComputeLocal(val.body, val.env)
 		} else if is(val, TagPrimitive) {
 			(*val.Primitive)(env)
 		} else {
@@ -568,5 +572,5 @@ func (f *Forsp) SetReader(r io.Reader) error {
 }
 
 func (f *Forsp) Compute(obj *Obj) {
-	f.ComputeEnv(obj, f.Env)
+	f.ComputeEnv(obj, &f.Env)
 }
