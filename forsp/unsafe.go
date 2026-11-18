@@ -6,38 +6,38 @@ import "unsafe"
 
 // Low-level primitives
 func (f *Forsp) primPtrState(_ **Obj) {
-	p := uintptr(unsafe.Pointer(&state))
-	push(numberNew(int64(p)))
+	p := uintptr(unsafe.Pointer(f))
+	f.Push(NewNumber(int64(p)))
 }
 
-func primPtrRead(_ **Obj) {
-	n := (*int64)(unsafe.Pointer(uintptr(objInt64(pop()))))
-	push(numberNew(*n))
+func (f *Forsp) primPtrRead(_ **Obj) {
+	n := (*int64)(unsafe.Pointer(f.Pop()))
+	f.Push(NewNumber(*n))
 }
 
-func primPtrWrite(_ **Obj) {
-	b, a := pop(), (*int64)(unsafe.Pointer(uintptr(objInt64(pop()))))
-	*a = objInt64(b)
+func (f *Forsp) primPtrWrite(_ **Obj) {
+	b, a := f.Pop(), (*int64)(unsafe.Pointer(f.Pop()))
+	*a = int64(*b.Number)
 }
 
-func primPtrToObj(_ **Obj) {
-	p := unsafe.Pointer(uintptr(objInt64(pop())))
-	push((*Obj)(p))
+func (f *Forsp) primPtrToObj(_ **Obj) {
+	p := unsafe.Pointer(f.Pop())
+	f.Push((*Obj)(p))
 }
 
-func primPtrFromObj(_ **Obj) {
-	a := pop()
+func (f *Forsp) primPtrFromObj(_ **Obj) {
+	a := f.Pop()
 	p := unsafe.Pointer(a)
-	push(numberNew(int64(uintptr(p))))
+	f.Push(NewNumber(int64(uintptr(p))))
 }
 
 func optionalUnsafe(f *Forsp, env *Obj) *Obj {
 	// Low-level primitives
-	env = envDefinePrim(env, "ptr-state!", f.primPtrState)
-	env = envDefinePrim(env, "ptr-read!", primPtrRead)
-	env = envDefinePrim(env, "ptr-write!", primPtrWrite)
-	env = envDefinePrim(env, "ptr-to-obj!", primPtrToObj)
-	env = envDefinePrim(env, "ptr-from-obj!", primPtrFromObj)
+	env = f.EnvDefinePrim(env, "ptr-state!", f.primPtrState)
+	env = f.EnvDefinePrim(env, "ptr-read!", f.primPtrRead)
+	env = f.EnvDefinePrim(env, "ptr-write!", f.primPtrWrite)
+	env = f.EnvDefinePrim(env, "ptr-to-obj!", f.primPtrToObj)
+	env = f.EnvDefinePrim(env, "ptr-from-obj!", f.primPtrFromObj)
 
 	return env
 }
